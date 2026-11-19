@@ -1,0 +1,8 @@
+"shinkairp"
+{
+	"base"		"base"
+	"title"		"Shinkai RP"
+	"maps"		""
+	"menusystem"	"1"
+	"category"	"rp"
+}
