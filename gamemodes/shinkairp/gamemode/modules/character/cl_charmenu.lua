@@ -89,105 +89,48 @@ local function buildList(parent, payload)
 end
 
 ---------------------------------------------------------------------------
--- Formulaire de création
+-- Création : renvoie vers les écrans illustrés (cl_creation.lua)
 ---------------------------------------------------------------------------
 local function buildCreation(parent, payload)
-	if #payload.characters >= C.MaxCharacters then
-		local full = label(parent, "Nombre maximal de personnages atteint.", "Shinkai.Medium", Colors.muted)
-		full:Dock(TOP)
-		return
-	end
-
-	local selectedFaction, selectedModel = nil, 1
-
 	local title = label(parent, "Nouveau personnage", "Shinkai.Large")
 	title:Dock(TOP)
 	title:DockMargin(0, 0, 0, 12)
 
-	local nameTitle = label(parent, "Nom et prénom", "Shinkai.Small", Colors.muted)
-	nameTitle:Dock(TOP)
+	local full = #payload.characters >= C.MaxCharacters
+	local info = label(parent, full and "Nombre maximal de personnages atteint."
+		or string.format("%d / %d emplacements utilisés.", #payload.characters, C.MaxCharacters),
+		"Shinkai.Small", Colors.muted)
+	info:Dock(TOP)
 
-	local nameEntry = vgui.Create("DTextEntry", parent)
-	nameEntry:Dock(TOP)
-	nameEntry:DockMargin(0, 4, 0, 12)
-	nameEntry:SetTall(30)
-	nameEntry:SetFont("Shinkai.Small")
-	nameEntry:SetPlaceholderText("Ex. : Haruto Minase")
-
-	local factionTitle = label(parent, "Faction", "Shinkai.Small", Colors.muted)
-	factionTitle:Dock(TOP)
-
-	local factionBox = vgui.Create("DComboBox", parent)
-	factionBox:Dock(TOP)
-	factionBox:DockMargin(0, 4, 0, 12)
-	factionBox:SetTall(30)
-	factionBox:SetFont("Shinkai.Small")
-
-	local modelTitle = label(parent, "Apparence", "Shinkai.Small", Colors.muted)
-	modelTitle:Dock(TOP)
-
-	local modelBox = vgui.Create("DComboBox", parent)
-	modelBox:Dock(TOP)
-	modelBox:DockMargin(0, 4, 0, 12)
-	modelBox:SetTall(30)
-	modelBox:SetFont("Shinkai.Small")
+	if full then return end
 
 	local create = vgui.Create("DButton", parent)
 	create:Dock(BOTTOM)
 	create:SetTall(40)
-	create:SetText("Créer le personnage")
+	create:SetText("Créer un personnage")
 	UI.StyleButton(create, Colors.accent)
-
-	local preview = vgui.Create("DModelPanel", parent)
-	preview:Dock(FILL)
-	preview:SetFOV(38)
-	preview.LayoutEntity = function(_, entity)
-		entity:SetAngles(Angle(0, 35 + math.sin(CurTime() * 0.6) * 20, 0))
-	end
-
-	local function setModel(index)
-		selectedModel = index
-		local faction = C.Factions[selectedFaction]
-		if faction and faction.models[index] then
-			preview:SetModel(faction.models[index])
-		end
-	end
-
-	local function setFaction(id)
-		selectedFaction = id
-		modelBox:Clear()
-		for index in ipairs(C.Factions[id].models) do
-			modelBox:AddChoice("Apparence " .. index, index, index == 1)
-		end
-		setModel(1)
-	end
-
-	factionBox.OnSelect = function(_, _, _, id) setFaction(id) end
-	modelBox.OnSelect = function(_, _, _, index) setModel(index) end
-
-	local first = true
-	for _, id in ipairs(C.FactionOrder) do
-		if payload.factions[id] then
-			factionBox:AddChoice(C.Factions[id].name, id, first)
-			first = false
-		end
-	end
-
 	create.DoClick = function()
-		if not selectedFaction then return end
-		net.Start("Shinkai.CharCreate")
-		net.WriteString(nameEntry:GetValue())
-		net.WriteString(selectedFaction)
-		net.WriteUInt(selectedModel, 8)
-		net.SendToServer()
+		menu:Remove()
+		Shinkai.CharCreation.OpenFactions(payload)
 	end
 end
 
 ---------------------------------------------------------------------------
 -- Fenêtre
 ---------------------------------------------------------------------------
+Shinkai.CharMenu = Shinkai.CharMenu or {}
+
+function Shinkai.CharMenu.Close()
+	if IsValid(menu) then menu:Remove() end
+end
+
 local function open(payload)
 	if IsValid(menu) then menu:Remove() end
+	Shinkai.CharCreation.Close()
+
+	if #payload.characters == 0 then
+		return Shinkai.CharCreation.OpenFactions(payload)
+	end
 
 	menu = vgui.Create("EditablePanel")
 	menu:SetSize(ScrW(), ScrH())
@@ -228,6 +171,8 @@ local function open(payload)
 		close.DoClick = function() menu:Remove() end
 	end
 end
+
+Shinkai.CharMenu.Open = open
 
 net.Receive("Shinkai.CharMenu", function()
 	open(net.ReadTable())

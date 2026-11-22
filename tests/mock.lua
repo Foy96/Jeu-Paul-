@@ -117,6 +117,10 @@ NULL = setmetatable({}, { __index = function(_, k) if k == "IsValid" then return
 file = {}
 function file.Find(pattern, where) assert(where == "LUA"); return _pyfind(pattern) end
 function file.CreateDir() end
+function file.Exists(path) return _images[path:gsub("^materials/", "")] == true end
+_images = {}
+resource = { AddFile = function(p) assert(file.Exists(p), "AddFile sur un fichier absent"); _resources[#_resources + 1] = p end }
+_resources = {}
 function file.Append() end
 local dirStack = { GAMEMODE_DIR .. "/gamemode/" }
 function include(path)

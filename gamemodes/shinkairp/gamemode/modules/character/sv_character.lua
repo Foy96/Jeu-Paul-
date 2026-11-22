@@ -182,7 +182,15 @@ net.Receive("Shinkai.CharCreate", function(_, ply)
 	table.insert(ply.ShinkaiChars, char)
 	Shinkai.Log("Personnage", Shinkai.LogName(ply) .. " a créé " .. char.name .. " (" .. faction.name .. ")")
 	Shinkai.Notify(ply, "Personnage créé : " .. char.name, Shinkai.NOTIFY_SUCCESS)
-	Char.SendMenu(ply)
+
+	-- Sans personnage en jeu, on incarne directement celui qui vient d'être créé.
+	if not ply.ShinkaiChar then
+		net.Start("Shinkai.CharMenuClose")
+		net.Send(ply)
+		Char.Load(ply, char)
+	else
+		Char.SendMenu(ply)
+	end
 end)
 
 net.Receive("Shinkai.CharSelect", function(_, ply)

@@ -1,0 +1,2 @@
+Déposez ici factions.png, pourfendeurs.png et demons.png.
+Garry's Mod monte automatiquement le dossier content/ d'un gamemode.

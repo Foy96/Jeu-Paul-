@@ -121,6 +121,18 @@ Ces points n'étaient pas fixés par le cahier des charges ; ils sont tous modif
 
 Aucun modèle ni son personnalisé n'est fourni : les personnages utilisent des modèles Half-Life 2, le katana le modèle du pied-de-biche, et les effets visuels des particules colorées du jeu de base. À remplacer dans `config/sh_config.lua` (modèles), `entities/weapons/` (armes) et `modules/combat/cl_fx.lua` (effets).
 
+## Images de création de personnage
+
+Les écrans de création utilisent trois images, à déposer dans `gamemodes/shinkairp/content/materials/shinkai/` :
+
+| Fichier | Écran |
+|---|---|
+| `factions.png` (1672 × 941) | Choix de la faction : zones Démon, Pourfendeur et Confirmer |
+| `pourfendeurs.png` | Fond du formulaire de création Pourfendeur |
+| `demons.png` | Fond du formulaire de création Démon |
+
+Le serveur les envoie automatiquement aux joueurs. Une image absente est remplacée par un fond uni. Si `factions.png` change, ses zones cliquables se règlent en haut de `modules/character/cl_creation.lua`.
+
 ## Tests
 
 ```

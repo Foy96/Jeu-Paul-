@@ -5,6 +5,7 @@ local MESSAGES = {
 	"Shinkai.Ready",
 	-- Personnages
 	"Shinkai.CharMenu",
+	"Shinkai.CharMenuClose",
 	"Shinkai.CharCreate",
 	"Shinkai.CharSelect",
 	"Shinkai.CharDelete",

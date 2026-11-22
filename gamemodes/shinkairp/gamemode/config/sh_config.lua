@@ -27,6 +27,7 @@ C.Factions = {
 		plural = "Pourfendeurs",
 		color = Color(90, 170, 255),
 		weapon = "shinkai_katana",
+		creationImage = "shinkai/pourfendeurs.png", -- fond de l'écran de création (materials/)
 		whitelist = false, -- true : création réservée aux joueurs whitelistés
 		models = {
 			"models/player/group01/male_02.mdl",
@@ -42,6 +43,7 @@ C.Factions = {
 		plural = "Démons",
 		color = Color(200, 50, 60),
 		weapon = "shinkai_griffes",
+		creationImage = "shinkai/demons.png", -- image à fournir ; fond uni en attendant
 		whitelist = false,
 		models = {
 			"models/player/corpse1.mdl",
@@ -54,6 +56,10 @@ C.Factions = {
 
 -- Ordre d'affichage des factions dans les menus.
 C.FactionOrder = { "slayer", "demon" }
+
+-- Image de l'écran de choix de la faction (materials/shinkai/factions.png).
+-- Les zones cliquables sont dans modules/character/cl_creation.lua.
+C.FactionScreenImage = "shinkai/factions.png"
 
 ---------------------------------------------------------------------------
 -- Souffles

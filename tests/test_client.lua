@@ -88,10 +88,47 @@ local chars = {
 	{ id = 2, name = "Akuma Kage", faction = "demon", grade = 1, style = "", model = "x" },
 }
 _receive("Shinkai.CharMenu", nil, { characters = chars, factions = { slayer = true, demon = true }, active = 1 })
-local n = _exercise(); check(n > 10, "menu personnages construit (" .. n .. " panneaux)")
-check(_lastSent("Shinkai.CharCreate") ~= nil and _lastSent("Shinkai.CharSelect") ~= nil and _lastSent("Shinkai.CharDelete") ~= nil, "création, sélection et suppression envoyées")
-check(_lastSent("Shinkai.CharCreate").data[2] == "slayer", "faction par défaut sélectionnée")
-_receive("Shinkai.CharMenu", nil, { characters = {}, factions = { slayer = true, demon = false }, active = 0 }); _exercise()
+local n = _exercise(); check(n > 10, "liste des personnages construite (" .. n .. " panneaux)")
+check(_lastSent("Shinkai.CharSelect") ~= nil and _lastSent("Shinkai.CharDelete") ~= nil, "sélection et suppression envoyées")
+
+-- Écran de choix de la faction : on clique au centre des zones de factions.png.
+local function screenOf(list) for i = #list, 1, -1 do if rawget(list[i], "OnMousePressed") then return list[i] end end end
+local function click(screen, x, y) -- coordonnées dans l'image 1672 x 941, écran 1920 x 1080
+	local scale = math.min(1920 / 1672, 1080 / 941)
+	screen.cursor = { (1920 - 1672 * scale) / 2 + x * scale, (1080 - 941 * scale) / 2 + y * scale }
+	screen.OnMousePressed(screen, MOUSE_LEFT)
+end
+local function factionFlow(images, factions, x, y, expected, preselected)
+	_images = images
+	_receive("Shinkai.CharMenu", nil, { characters = {}, factions = factions, active = 0 })
+	local screen = screenOf(_panels); check(screen, "le premier personnage ouvre le choix de faction")
+	_polys = 0
+	screen.hovered = false; screen.Paint(screen, 1920, 1080)
+	if not preselected then
+		click(screen, 850, 870) -- Confirmer sans faction : rien
+		check(#_panels == 1, "confirmer sans faction ne fait rien")
+		click(screen, 1300, 710)
+	end
+	local notes = _notes
+	click(screen, x, y); screen.Paint(screen, 1920, 1080)
+	if not factions[expected == "slayer" and "demon" or "slayer"] then check(_notes == notes + 1, "faction verrouillée signalée") end
+	check(_polys > 0, "zones dessinées")
+	click(screen, 850, 870)
+	local form = _panels; _panels = {}
+	for _, p in ipairs(form) do local paint = rawget(p, "Paint"); if type(paint) == "function" then paint(p, 820, 520) end end
+	for _, p in ipairs(form) do if rawget(p, "OnSelect") then p.OnSelect(p, 1, "Apparence 1", 1) end end
+	-- Le bouton « Créer » est le seul DButton du formulaire avec une couleur de faction.
+	local sent = _countSent("Shinkai.CharCreate")
+	for _, p in ipairs(form) do local c = rawget(p, "DoClick"); if c and p.class == "DButton" then c(p) end end
+	check(_countSent("Shinkai.CharCreate") == sent + 1, "formulaire envoyé")
+	local msg = _lastSent("Shinkai.CharCreate")
+	check(msg.data[1] == "Akira Test Akira Test", "prénom et nom réunis"); check(msg.data[2] == expected, "faction choisie : " .. expected)
+	_panels = {}
+end
+factionFlow({ ["shinkai/factions.png"] = true, ["shinkai/pourfendeurs.png"] = true }, { slayer = true, demon = true }, 1300, 710, "slayer")
+factionFlow({}, { slayer = true, demon = true }, 370, 710, "demon") -- sans images : fond uni
+factionFlow({}, { slayer = true, demon = false }, 370, 710, "slayer", true) -- démon sous whitelist : refusé, Pourfendeur présélectionné
+_receive("Shinkai.CharMenuClose", nil)
 _receive("Shinkai.CharMenu", nil, { characters = { chars[1], chars[2], chars[1] }, factions = { slayer = true }, active = 0 }); _exercise()
 
 setChar(_local, "slayer", 2, "")

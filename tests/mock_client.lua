@@ -9,8 +9,21 @@ surface.GetTextSize = function(text) assert(type(text) == "string"); return #tex
 surface.SetDrawColor = function(r, g, b) assert(isColor(r) or (type(r) == "number" and type(g) == "number" and type(b) == "number"), "SetDrawColor invalide") end
 surface.DrawRect = function(x, y, w, h) assert(x and y and w and h) end
 surface.DrawOutlinedRect = function(x, y, w, h) assert(x and y and w and h) end
+_polys = 0
+surface.DrawPoly = function(points)
+	assert(#points >= 3, "DrawPoly : moins de 3 points")
+	local a, b, c = points[1], points[2], points[3]
+	local cross = (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x)
+	assert(cross >= 0, "DrawPoly : triangle dans le sens antihoraire (invisible en jeu)")
+	_polys = _polys + 1
+end
+surface.DrawLine = function(x1, y1, x2, y2) assert(x1 and y1 and x2 and y2) end
+surface.SetMaterial = function(m) assert(m and not m:IsError()) end
+surface.DrawTexturedRect = function(x, y, w, h) assert(x and y and w and h) end
+function Material(path) local ok = _images[path] == true; return { IsError = function() return not ok end } end
+MOUSE_LEFT, MOUSE_RIGHT = 107, 108
 
-draw = {}
+draw = { NoTexture = function() end }
 local function text(t, font, x, y, color)
 	assert(t ~= nil, "texte nil"); assert(fonts[font], "police inconnue : " .. tostring(font))
 	assert(type(x) == "number" and type(y) == "number", "position invalide pour : " .. tostring(t))
@@ -38,8 +51,10 @@ _panels = {}
 local PANEL = {}
 function PANEL:IsValid() return not rawget(self, "removed") end
 function PANEL:Remove() self.removed = true end
-function PANEL:GetWide() return 400 end
-function PANEL:GetTall() return 300 end
+function PANEL:GetWide() return rawget(self, "w") or 400 end
+function PANEL:GetTall() return rawget(self, "h") or 300 end
+function PANEL:SetSize(w, h) self.w, self.h = w, h end
+function PANEL:CursorPos() local c = rawget(self, "cursor") or { 0, 0 }; return c[1], c[2] end
 function PANEL:SetNumeric(b) self.numeric = b end
 function PANEL:GetValue() return rawget(self, "numeric") and "250" or "Akira Test" end
 function PANEL:IsHovered() return rawget(self, "hovered") == true end
